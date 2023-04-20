@@ -32,7 +32,6 @@ class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = IngredientSerializer
     permission_classes = [AllowAny]
     filter_backends = [IngredientFilter]
-    search_fields = ['^name']
     pagination_class = None
 
 
