@@ -82,7 +82,6 @@ class Recipe(models.Model):
         Tag,
         verbose_name='Тег',
         related_name='recipes',
-        through='RecipeTag',
     )
     cooking_time = models.PositiveSmallIntegerField(
         validators=[MinValueValidator(
@@ -91,11 +90,15 @@ class Recipe(models.Model):
         ],
         verbose_name='Время готовки'
     )
+    pub_date = models.DateTimeField(
+        verbose_name='Дата публикации',
+        auto_now_add=True
+    )
 
     class Meta:
         verbose_name = 'Рецепт'
         verbose_name_plural = 'Рецепты'
-        ordering = ['-id']
+        ordering = ['-pub_date']
 
     def __str__(self):
         return f'{self.name} {self.text}'
@@ -134,33 +137,6 @@ class RecipeIngredient(models.Model):
 
     def __str__(self):
         return f"{self.recipe} {self.ingredient} - {self.quantity}"
-
-
-class RecipeTag(models.Model):
-    recipe = models.ForeignKey(
-        Recipe,
-        on_delete=models.CASCADE,
-        verbose_name='Рецепт'
-    )
-    tag = models.ForeignKey(
-        Tag,
-        on_delete=models.CASCADE,
-        verbose_name='Тег'
-    )
-
-    class Meta:
-        verbose_name = 'Рецепт с тегом'
-        verbose_name_plural = 'Рецепты с тегами'
-        ordering = ['recipe']
-        constraints = [
-            UniqueConstraint(
-                fields=['recipe', 'tag'],
-                name='unique_recipe_tag'
-            )
-        ]
-
-    def __str__(self):
-        return f"{self.recipe} - {self.tag}"
 
 
 class FavoritesList(models.Model):
