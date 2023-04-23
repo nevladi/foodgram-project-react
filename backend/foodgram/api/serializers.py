@@ -64,7 +64,7 @@ class RecipeIngredientSerializer(serializers.ModelSerializer):
 
 class RecipeIngredientPostSerializer(serializers.ModelSerializer):
     id = serializers.PrimaryKeyRelatedField(
-        queryset=Ingredient.objects.all()
+        queryset=Ingredient.objects.all(), source='ingredient'
     )
     quantity = serializers.IntegerField()
 
@@ -116,31 +116,29 @@ class RecipePostSerializer(serializers.ModelSerializer):
 
     def validate_ingredients(self, ingredients):
         ingredient_list = [ingredient.id for ingredient in ingredients]
-        for ingredient in ingredients:
-            quantity = int(ingredient.quantity)
-            if quantity < 1:
-                raise serializers.ValidationError('Количество не может быть меньше 1!')
-            if ingredient_list.count(ingredient.id) > 1:
-                raise serializers.ValidationError('Ингредиенты должны быть уникальными!')
+        if len(set(ingredient_list)) != len(ingredient_list):
+            raise serializers.ValidationError('Ингредиенты должны быть уникальными!')
         return ingredients
 
     def create(self, validated_data):
-        ingredients_data = validated_data.pop('ingredients')
+        ingredients = validated_data.pop('ingredients')
         tags_data = validated_data.pop('tags')
         author = self.context.get('request').user
         recipe = Recipe.objects.create(author=author, **validated_data)
-        ingredients = self.validate_ingredients(ingredients_data)
-        recipe.ingredients.set(ingredients)
+        for ingredient in ingredients:
+            RecipeIngredient.objects.create(recipe=recipe, **ingredient)
         recipe.tags.set(tags_data)
         return recipe
 
     def update(self, instance, validated_data):
-        instance.ingredients.clear()
-        ingredients_data = validated_data.pop('ingredients')
-        tags_data = validated_data.pop('tags')
-        ingredients = self.validate_ingredients(ingredients_data)
-        instance.ingredients.set(ingredients)
-        instance.tags.set(tags_data)
+        ingredients_data = validated_data.pop('ingredients', None)
+        tags_data = validated_data.pop('tags', None)
+        if ingredients_data is not None:
+            instance.ingredients.clear()
+            for ingredient in ingredients_data:
+                RecipeIngredient.objects.create(recipe=instance, **ingredient)
+        if tags_data is not None:
+            instance.tags.set(tags_data)
         return super().update(instance, validated_data)
 
     def to_representation(self, instance):

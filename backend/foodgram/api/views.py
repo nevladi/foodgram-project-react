@@ -28,30 +28,30 @@ class CustUserViewSet(UserViewSet):
     def subscriptions(self, request):
         user = request.user
         queryset = User.objects.filter(author__user=user)
-        serializer = UserSubscriptionSerializer(queryset, many=True, context={'request': request})
-        return Response(serializer.data)
+        paginator = self.pagination_class()
+        result_page = paginator.paginate_queryset(queryset, request)
+        serializer = UserSubscriptionSerializer(result_page, many=True, context={'request': request})
+        return paginator.get_paginated_response(serializer.data)
 
     @action(detail=True, methods=['post'], permission_classes=[IsAuthenticated])
     def subscribe(self, request, **kwargs):
         user = request.user
         author_id = self.kwargs.get('id')
         author = get_object_or_404(User, id=author_id)
-        if request.method == 'POST':
-            serializer = UserSubscriptionSerializer(
-                author, data=request.data, context={'request': request})
-            serializer.is_valid(raise_exception=True)
-            Subscription.objects.create(user=user, author=author)
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        serializer = UserSubscriptionSerializer(
+            author, data=request.data, context={'request': request})
+        serializer.is_valid(raise_exception=True)
+        Subscription.objects.create(user=user, author=author)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
-    @action(detail=True, methods=['delete'], permission_classes=[IsAuthenticated])
+    @subscribe.mapping.delete
     def remove_from_subscribe(self, request, **kwargs):
         user = request.user
         author_id = self.kwargs.get('id')
         author = get_object_or_404(User, id=author_id)
-        if request.method == 'DELETE':
-            subscription = get_object_or_404(Subscription, user=user, author=author)
-            subscription.delete()
-            return Response(status=status.HTTP_204_NO_CONTENT)
+        subscription = get_object_or_404(Subscription, user=user, author=author)
+        subscription.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class TagViewSet(viewsets.ReadOnlyModelViewSet):
@@ -82,7 +82,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
         return RecipePostSerializer
 
     @action(detail=True, methods=['post'], permission_classes=[IsAuthenticated])
-    def add_to_favorites(self, request, id):
+    def favorite(self, request, id):
         recipe = get_object_or_404(Recipe, pk=id)
         data = {'user': request.user.pk, 'recipe': recipe.pk}
         serializer = FavoritesListSerializer(data=data, context={'request': request})
@@ -90,7 +90,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
         serializer.save()
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
-    @action(detail=True, methods=['delete'], permission_classes=[IsAuthenticated])
+    @favorite.mapping.delete
     def remove_from_favorites(self, request, id):
         recipe = get_object_or_404(Recipe, pk=id)
         fav_filter = FavoritesList.objects.filter(user=request.user, recipe=recipe)
@@ -100,7 +100,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
         return Response(status=status.HTTP_400_BAD_REQUEST)
 
     @action(detail=True, methods=['post'], permission_classes=[IsAuthenticated])
-    def add_to_shopping_list(self, request, id):
+    def shopping_cart(self, request, id):
         recipe = get_object_or_404(Recipe, pk=id)
         data = {'user': request.user.pk, 'recipe': recipe.pk}
         serializer = ShoppingListSerializer(data=data, context={'request': request})
@@ -108,7 +108,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
         serializer.save()
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
-    @action(detail=True, methods=['delete'], permission_classes=[IsAuthenticated])
+    @shopping_cart.mapping.delete
     def remove_from_shopping_list(self, request, id):
         recipe = get_object_or_404(Recipe, pk=id)
         shop_filter = ShoppingList.objects.filter(user=request.user, recipe=recipe)
@@ -118,7 +118,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
         return Response(status=status.HTTP_400_BAD_REQUEST)
 
     @action(detail=False, methods=['get'], permission_classes=[IsAuthenticated])
-    def download_shopping_list(self, request):
+    def download_shopping_cart(self, request):
         ingredients = RecipeIngredient.objects.filter(recipe__shopping__user=request.user).values(
             'ingredient__name', 'ingredient__measurement_unit').annotate(quantity=Sum('quantity'))
         shop_list = []
