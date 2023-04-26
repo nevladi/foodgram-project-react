@@ -9,7 +9,7 @@ services:
       - ./.env
 
   web:
-    image: nevladi/foodgram:latest
+    image: 
     restart: always
     volumes:
       - static_value:/app/static/
@@ -20,7 +20,7 @@ services:
       - ./.env
 
   frontend:
-    image: nevladi/foodgram_f:latest
+    image: 
     volumes:
       - ../frontend/:/app/result_build/
     depends_on:
