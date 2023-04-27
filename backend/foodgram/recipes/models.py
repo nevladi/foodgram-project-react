@@ -117,7 +117,7 @@ class RecipeIngredient(models.Model):
         related_name='recipe_ingr',
         verbose_name='Ингредиент'
     )
-    quantity = models.PositiveSmallIntegerField(
+    amount = models.PositiveSmallIntegerField(
         validators=[MinValueValidator(
             1, 'Количество ингредиентов не может быть меньше 1'
         ),
@@ -136,7 +136,7 @@ class RecipeIngredient(models.Model):
         ]
 
     def __str__(self):
-        return f"{self.recipe} {self.ingredient} - {self.quantity}"
+        return f"{self.recipe} {self.ingredient} - {self.amount}"
 
 
 class FavoritesList(models.Model):
@@ -185,7 +185,7 @@ class ShoppingList(models.Model):
     class Meta:
         verbose_name = 'Список покупок'
         verbose_name_plural = 'Списки покупок'
-        ordering = ['user']
+        ordering = ['id']
         constraints = [
             UniqueConstraint(
                 fields=['user', 'recipe'],

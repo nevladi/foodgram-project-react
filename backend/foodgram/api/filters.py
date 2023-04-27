@@ -1,5 +1,5 @@
 import django_filters
-from django_filters.rest_framework import filters, FilterSet
+from django_filters.rest_framework import FilterSet, filters
 
 from recipes.models import Ingredient, Recipe, Tag
 
@@ -13,20 +13,20 @@ class RecipeFilter(FilterSet):
     is_favorited = filters.BooleanFilter(
         method='get_is_favorited'
     )
-    is_shopping_list = filters.BooleanFilter(
-        method='get_is_shopping_list'
+    is_in_shopping_cart = filters.BooleanFilter(
+        method='get_is_in_shopping_cart'
     )
 
     class Meta:
         model = Recipe
-        fields = ['tags', 'author', 'is_favorited', 'is_shopping_list']
+        fields = ['tags', 'author', 'is_favorited', 'is_in_shopping_cart']
 
     def get_is_favorited(self, queryset, name, value):
         if value:
             return queryset.filter(favorites__user=self.request.user)
         return queryset
 
-    def get_is_shopping_list(self, queryset, name, value):
+    def get_is_in_shopping_cart(self, queryset, name, value):
         if value:
             return queryset.filter(shopping__user=self.request.user)
         return queryset
