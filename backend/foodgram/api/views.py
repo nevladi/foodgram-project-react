@@ -157,7 +157,9 @@ class RecipeViewSet(viewsets.ModelViewSet):
             amount = ingredient['amount']
             measurement_unit = ingredient['ingredient__measurement_unit']
             if name not in unique_ingredients:
-                unique_ingredients[name] = {'amount': amount, 'measurement_unit': measurement_unit}
+                unique_ingredients[name] = {
+                    'amount': amount, 'measurement_unit': measurement_unit
+                }
             else:
                 unique_ingredients[name]['amount'] += amount
         shop_list = []
