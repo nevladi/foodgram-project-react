@@ -153,11 +153,10 @@ class RecipeViewSet(viewsets.ModelViewSet):
         ).annotate(amount=Sum('amount')).distinct('ingredient__name')
         shop_list = []
         for ingredient in ingredients:
-            if ingredient['ingredient__name'] in shop_list
-                name = ingredient['ingredient__name']
-                amount = ingredient['amount']
-                measurement_unit = ingredient['ingredient__measurement_unit']
-                shop_list.append(f"{name} - {amount} {measurement_unit}")
+            name = ingredient['ingredient__name']
+            amount = ingredient['amount']
+            measurement_unit = ingredient['ingredient__measurement_unit']
+            shop_list.append(f"{name} - {amount} {measurement_unit}")
 
         ingredient_list = "Список покупок:\n"
         ingredient_list += ",\n".join(shop_list)
