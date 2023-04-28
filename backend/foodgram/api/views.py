@@ -150,22 +150,13 @@ class RecipeViewSet(viewsets.ModelViewSet):
             recipe__shopping__user=request.user
         ).values(
             'ingredient__name', 'ingredient__measurement_unit'
-        ).annotate(amount=Sum('amount'))
-        unique_ingredients = {}
+        ).annotate(amount=Sum('amount')).order_by('ingredient__name')
+
+        shop_list = []
         for ingredient in ingredients:
             name = ingredient['ingredient__name']
             amount = ingredient['amount']
             measurement_unit = ingredient['ingredient__measurement_unit']
-            if name not in unique_ingredients:
-                unique_ingredients[name] = {
-                    'amount': amount, 'measurement_unit': measurement_unit
-                }
-            else:
-                unique_ingredients[name]['amount'] += amount
-        shop_list = []
-        for name, data in unique_ingredients.items():
-            amount = data['amount']
-            measurement_unit = data['measurement_unit']
             shop_list.append(f"{name} - {amount} {measurement_unit}")
 
         ingredient_list = "Список покупок:\n"
